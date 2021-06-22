@@ -35,3 +35,25 @@ def manage_items(request, *args, **kwargs):
         response = {
             'message': f"{key} successfully set to {value}"
         }
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def manage_item(request, *args, **kwargs):
+    if request.Method == 'GET':
+        if kwargs['key']:
+            value = redis_instance.get(kwargs['key'])
+            if value:
+                response = {
+                    'key': kwargs['key'],
+                    'value': value,
+                    'message': 'Success'
+                }
+                return Response(response, status=200)
+            else:
+                response = {
+                    'key': kwargs['key'],
+                    'value': None,
+                    'message': 'Not found!'
+                }
+                return Response(response, status=404)
+    elif request.Method == 'PUT':
+        
