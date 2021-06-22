@@ -29,7 +29,9 @@ def manage_items(request, *args, **kwargs):
         return Response(response, status=200)
     elif request.method == 'POST':
         item = json.loads(request.body)
-        key = list(item.key())[0]
+        print(item, "------------------->")
+        key = list(item.key())
+        print(key, "-------------------->")
         value = item[key]
         redis_instance.set(key, value)
         response = {
@@ -38,7 +40,7 @@ def manage_items(request, *args, **kwargs):
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def manage_item(request, *args, **kwargs):
-    if request.Method == 'GET':
+    if request.method == 'GET':
         if kwargs['key']:
             value = redis_instance.get(kwargs['key'])
             if value:
@@ -55,5 +57,38 @@ def manage_item(request, *args, **kwargs):
                     'message': 'Not found!'
                 }
                 return Response(response, status=404)
-    elif request.Method == 'PUT':
-        
+    elif request.method == 'PUT':
+        if kwargs['key']:
+            request_data = json.loads(request.body)
+            new_value = request_data['new_value']
+            value = redis_instance.get(kwargs['key'])
+            if value:
+                redis_instance.set(kwargs['key'], new_value)
+                response = {
+                    'key': kwargs['key'],
+                    'value': value,
+                    'message': f"Successfully upadted {kwargs['key']}"
+                }
+                return Response(response, status=200)
+            else:
+                response = {
+                    'key': kwargs['key'],
+                    'value': None,
+                    'message': 'Not Found'
+                }
+                return Response(response, status=404)
+            
+    elif request.method == 'DELETE':
+        if kwargs['key']:
+            result = redis_instance.delete(kwargs['key'])
+            response = {
+                'message': f"{kwargs['key']} successfully deleted"
+            }
+            return Response(response, status=204)
+        else:
+            response = {
+                'key': kwargs['key'],
+                'value': None,
+                'message': 'Not found to delete'
+            }
+            return Response(response, status=404)
